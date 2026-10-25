@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { BusinessPage } from "@/components/public/business-page";
 import { PublicPageSkeleton, PublicShell } from "@/components/public/shell";
@@ -17,6 +18,8 @@ export default function Home() {
 }
 
 async function DefaultBusiness() {
+  // Rendered per request (the catalog itself stays cached): the build never depends on the database
+  await connection();
   const slug = process.env.DEFAULT_BUSINESS_SLUG;
   if (!slug) notFound();
   const catalog = await getPublicCatalog(slug);
