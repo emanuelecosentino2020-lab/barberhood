@@ -58,8 +58,14 @@ export async function getPublicCatalog(slug: string): Promise<PublicCatalog | nu
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
-  if (error) throw new Error("catalog_load_failed");
-  if (!business) return null;
+  if (error) {
+    console.error("[catalog] load failed", error.code, error.message);
+    throw new Error("catalog_load_failed");
+  }
+  if (!business) {
+    console.warn(`[catalog] no active business with slug "${slug}"`);
+    return null;
+  }
   const biz = business as unknown as PublicBusiness;
 
   const [services, staff, links, hours] = await Promise.all([
