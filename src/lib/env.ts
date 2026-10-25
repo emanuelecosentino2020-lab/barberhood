@@ -51,3 +51,8 @@ export function isSupabaseConfigured(): boolean {
       (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
   );
 }
+
+/** True when the server can reach Supabase with the secret key (needed for public pages). */
+export function isServerSupabaseConfigured(): boolean {
+  return isSupabaseConfigured() && Boolean(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
+}

@@ -1,5 +1,6 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { isServerSupabaseConfigured } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PUBLIC_BUSINESS_COLUMNS, type PublicBusiness } from "@/lib/types";
 
@@ -45,6 +46,11 @@ export async function getPublicCatalog(slug: string): Promise<PublicCatalog | nu
   cacheTag(businessTag(slug));
   cacheLife("minutes");
 
+  // A deploy without Supabase keys must still build: pages show "not found" until configured
+  if (!isServerSupabaseConfigured()) {
+    console.error("[config] Supabase keys missing: set NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY, SUPABASE_SECRET_KEY");
+    return null;
+  }
   const db = createAdminClient();
   const { data: business, error } = await db
     .from("businesses")
