@@ -7,16 +7,16 @@
  */
 :root,
 .theme-dark {
-  --bg: #0a0a0a;
-  --surface: #121212;
-  --surface-2: #1a1a1a;
-  --line: #262626;
-  --line-strong: #3a3a3a;
+  --bg: #1b1a18;
+  --surface: #242320;
+  --surface-2: #2d2b28;
+  --line: #37352f;
+  --line-strong: #4b4842;
   --text: #f3f1ec;
-  --muted: #a19d94;
-  --subtle: #6f6c66;
+  --muted: #bab5ab;
+  --subtle: #8c887f;
   --accent: #ece8df;
-  --accent-ink: #0a0a0a;
+  --accent-ink: #1b1a18;
   --danger: #f2877a;
   --success: #8fd19e;
   --warning: #e8c27a;
