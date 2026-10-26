@@ -238,7 +238,6 @@ export function BusinessPage({ catalog, basePath }: { catalog: PublicCatalog; ba
           <p>© {b.name}</p>
           <div className="flex gap-5">
             <Link href={`${basePath}/privacy`} className="hover:text-text">Privacy</Link>
-            <Link href="/admin" className="hover:text-text">Area riservata</Link>
           </div>
         </div>
       </footer>
