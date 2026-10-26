@@ -144,6 +144,7 @@ export const businessSettingsSchema = z.object({
   max_advance_days: z.coerce.number().int().min(1).max(365),
   cancellation_cutoff_hours: z.coerce.number().int().min(0).max(168),
   reminder_hours_before: z.coerce.number().int().min(0).max(168),
+  review_request_hours_after: z.coerce.number().int().min(0).max(72),
   require_phone: z.boolean(),
   allow_staff_choice: z.boolean(),
   notification_email: z.union([email, z.literal("")]).optional().transform((v) => v || null),

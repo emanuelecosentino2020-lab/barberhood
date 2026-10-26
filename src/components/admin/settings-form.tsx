@@ -54,6 +54,7 @@ export function SettingsForm({ business: b, emailConfigured }: { business: Busin
             max_advance_days: n("max_advance_days"),
             cancellation_cutoff_hours: n("cancellation_cutoff_hours"),
             reminder_hours_before: n("reminder_hours_before"),
+            review_request_hours_after: n("review_request_hours_after"),
             require_phone: c("require_phone"),
             allow_staff_choice: c("allow_staff_choice"),
             notification_email: s("notification_email"),
@@ -106,8 +107,8 @@ export function SettingsForm({ business: b, emailConfigured }: { business: Busin
           <Field label="Link Google Maps" htmlFor="google_maps_url">
             <Input id="google_maps_url" name="google_maps_url" type="url" defaultValue={b.google_maps_url ?? ""} />
           </Field>
-          <Field label="Link recensioni" htmlFor="reviews_url">
-            <Input id="reviews_url" name="reviews_url" type="url" defaultValue={b.reviews_url ?? ""} />
+          <Field label="Link recensioni Google" htmlFor="reviews_url" hint="Da Google Business Profile: «Chiedi recensioni» → copia il link. Serve anche per l'email dopo l'appuntamento.">
+            <Input id="reviews_url" name="reviews_url" type="url" defaultValue={b.reviews_url ?? ""} placeholder="https://g.page/r/…/review" />
           </Field>
           <Field label="Sito web" htmlFor="website_url">
             <Input id="website_url" name="website_url" type="url" defaultValue={b.website_url ?? ""} />
@@ -144,6 +145,9 @@ export function SettingsForm({ business: b, emailConfigured }: { business: Busin
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Promemoria al cliente (ore prima)" htmlFor="reminder_hours_before" hint="0 = nessun promemoria">
             <Input id="reminder_hours_before" name="reminder_hours_before" type="number" min={0} max={168} defaultValue={b.reminder_hours_before} required />
+          </Field>
+          <Field label="Richiesta recensione (ore dopo l'appuntamento)" htmlFor="review_request_hours_after" hint="Email con il link recensioni, al massimo una ogni 6 mesi per cliente. 0 = disattivata">
+            <Input id="review_request_hours_after" name="review_request_hours_after" type="number" min={0} max={72} defaultValue={b.review_request_hours_after} required />
           </Field>
           <Field label="Email del negozio per gli avvisi" htmlFor="notification_email">
             <Input id="notification_email" name="notification_email" type="email" defaultValue={b.notification_email ?? ""} />

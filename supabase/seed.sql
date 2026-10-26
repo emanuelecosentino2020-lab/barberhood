@@ -7,7 +7,7 @@
 
 insert into public.businesses (
   id, slug, name, vertical, tagline, description, address_line, city, postal_code,
-  phone, email, instagram_url, logo_url, gallery, staff_label, notification_email,
+  phone, email, instagram_url, logo_url, cover_image_url, gallery, staff_label, notification_email,
   privacy_controller_name, privacy_controller_email, theme
 ) values (
   '00000000-0000-4000-8000-000000000001',
@@ -23,6 +23,7 @@ insert into public.businesses (
   null,
   'https://www.instagram.com/barberhood.sr/',
   '/brand/barberhood/logo-mark.svg',
+  '/brand/barberhood/cover.webp',
   '["/brand/barberhood/diego.webp", "/brand/barberhood/luigi.webp"]'::jsonb,
   'Barbiere',
   null,

@@ -55,10 +55,12 @@ function ctx(over: Partial<DeliveryContext["appointment"]> = {}, biz: Partial<De
       logoUrl: null,
       accent: "#e8e4dc",
       slug: "barberhood",
+      reviewsUrl: "https://g.page/r/test/review",
       notificationEmail: "shop@example.com",
       replyTo: null,
       ...biz,
     },
+    reviewRecentlyRequested: false,
   };
 }
 
@@ -108,6 +110,36 @@ const config = (provider: EmailProvider | null) => ({
 });
 
 describe("skipReason", () => {
+  it("sends a review request only after the original end of a done appointment", () => {
+    const ENDS = "2026-11-12T09:40:00Z";
+    const review = job("review_request", { payload: { ends_at: ENDS } });
+    const after = new Date("2026-11-12T12:00:00Z");
+    expect(skipReason(review, ctx(), after)).toBeNull();
+    expect(skipReason(review, ctx({ status: "completed" }), after)).toBeNull();
+    expect(skipReason(review, ctx({ status: "no_show" }), after)).toBe("appointment_not_done");
+    expect(skipReason(review, ctx({ status: "cancelled" }), after)).toBe("appointment_not_done");
+    expect(skipReason(review, ctx({ endsAt: "2026-11-12T10:00:00Z" }), after)).toBe("appointment_moved");
+    expect(skipReason(review, ctx(), NOW)).toBe("appointment_not_ended");
+    expect(skipReason(review, ctx(), new Date("2026-11-20T12:00:00Z"))).toBe("too_late");
+    expect(skipReason(review, ctx({}, { reviewsUrl: null }), after)).toBe("no_reviews_url");
+    expect(skipReason(review, { ...ctx(), reviewRecentlyRequested: true }, after)).toBe("review_recently_requested");
+  });
+
+  it("renders the review request with the review link and no price", () => {
+    const html = renderEmail({
+      kind: "review_request",
+      siteUrl: "https://example.com",
+      business: ctx().business,
+      appointment: { ...ctx().appointment, previousStartsAt: null },
+      manageUrl: null,
+      adminUrl: "https://example.com/admin",
+    });
+    expect(html.html).toContain("https://g.page/r/test/review");
+    expect(html.text).toContain("Lascia una recensione: https://g.page/r/test/review");
+    expect(html.text).not.toContain("Prezzo");
+    expect(html.subject).toContain("Mario");
+  });
+
   it("sends a reminder only for the original start time of a confirmed future appointment", () => {
     expect(skipReason(job("reminder"), ctx(), NOW)).toBeNull();
     expect(skipReason(job("reminder"), ctx({ startsAt: "2026-11-13T09:00:00Z" }), NOW)).toBe("appointment_moved");
