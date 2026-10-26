@@ -15,7 +15,7 @@ insert into public.businesses (
   'Barberhood',
   'barber',
   'di Luigi Merlini',
-  'Barberia a Siracusa. Taglio, barba e rasatura all''italiana, fatti con calma e con le mani giuste.',
+  'Barberia a Siracusa. Taglio, barba e rasatura all''italiana.',
   'Indirizzo da confermare',
   'Siracusa',
   null,
