@@ -7,6 +7,9 @@ import type { NotificationRow } from "@/lib/types";
 import { resendProvider } from "./provider";
 import { processNotifications, type DeliveryContext, type NotificationStore, type WorkerResult } from "./worker";
 
+/** At most one review request per customer in this many days */
+const REVIEW_REQUEST_COOLDOWN_DAYS = 180;
+
 interface ContextRow {
   id: string;
   status: string;
@@ -17,6 +20,7 @@ interface ContextRow {
   customer_note: string | null;
   cancellation_reason: string | null;
   manage_token_nonce: string | null;
+  customer_id: string;
   staff: { display_name: string } | null;
   customers: { full_name: string; email: string | null; phone: string | null } | null;
   businesses: {
@@ -31,6 +35,7 @@ interface ContextRow {
     logo_url: string | null;
     theme: Record<string, unknown>;
     notification_email: string | null;
+    reviews_url: string | null;
   } | null;
 }
 
@@ -49,7 +54,7 @@ export function supabaseNotificationStore(db: SupabaseClient, onlyAppointmentId?
       const { data, error } = await db
         .from("appointments")
         .select(
-          "id, status, starts_at, ends_at, service_name, price_cents, customer_note, cancellation_reason, manage_token_nonce, staff(display_name), customers(full_name, email, phone), businesses(slug, name, timezone, currency, address_line, city, phone, email, logo_url, theme, notification_email)",
+          "id, status, starts_at, ends_at, service_name, price_cents, customer_note, cancellation_reason, manage_token_nonce, customer_id, staff(display_name), customers(full_name, email, phone), businesses(slug, name, timezone, currency, address_line, city, phone, email, logo_url, theme, notification_email, reviews_url)",
         )
         .eq("id", n.appointment_id)
         .maybeSingle();
@@ -59,6 +64,19 @@ export function supabaseNotificationStore(db: SupabaseClient, onlyAppointmentId?
       const b = r.businesses;
       if (!b || !r.customers) return null;
       const theme = b.theme ?? {};
+      let reviewRecentlyRequested = false;
+      if (n.kind === "review_request") {
+        const since = new Date(Date.now() - REVIEW_REQUEST_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
+        const { count, error: countError } = await db
+          .from("notifications")
+          .select("id, appointments!inner(customer_id)", { count: "exact", head: true })
+          .eq("kind", "review_request")
+          .eq("status", "sent")
+          .eq("appointments.customer_id", r.customer_id)
+          .gte("sent_at", since);
+        if (countError) throw new Error(`context_failed:${countError.code}`);
+        reviewRecentlyRequested = (count ?? 0) > 0;
+      }
       return {
         appointment: {
           id: r.id,
@@ -85,9 +103,11 @@ export function supabaseNotificationStore(db: SupabaseClient, onlyAppointmentId?
           email: b.email,
           logoUrl: typeof theme.email_logo_url === "string" ? theme.email_logo_url : null,
           accent: typeof theme.accent === "string" ? theme.accent : "#111111",
+          reviewsUrl: b.reviews_url,
           notificationEmail: b.notification_email,
           replyTo: b.email,
         },
+        reviewRecentlyRequested,
       };
     },
     async complete(id, providerMessageId) {

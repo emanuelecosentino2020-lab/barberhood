@@ -15,6 +15,7 @@ export interface EmailContext {
     logoUrl: string | null; // raster image (PNG/JPG): many email clients block SVG
     accent: string;
     slug: string;
+    reviewsUrl: string | null;
   };
   appointment: {
     startsAt: string;
@@ -119,6 +120,14 @@ function copyFor(ctx: EmailContext, when: string): Copy {
         showManage: false,
         showCalendar: false,
       };
+    case "review_request":
+      return {
+        subject: `Com'è andata, ${first}?`,
+        heading: "Grazie per essere passato",
+        intro: `Ciao ${first}, speriamo che il risultato ti piaccia. Se hai un minuto, lasciaci una recensione: per un negozio come il nostro fa davvero la differenza.`,
+        showManage: false,
+        showCalendar: false,
+      };
     case "owner_booking_cancelled":
       return {
         subject: `Disdetta · ${a.customerName} · ${when}`,
@@ -147,12 +156,13 @@ export function renderEmail(ctx: EmailContext): RenderedEmail {
     rows.push(["Prima era", `${formatLongDate(a.previousStartsAt, tz)} alle ${formatTime(a.previousStartsAt, tz)}`]);
   }
   if (a.staffName) rows.push(["Con", a.staffName]);
-  rows.push(["Prezzo", formatPrice(a.priceCents, b.currency)]);
+  const isReview = ctx.kind === "review_request";
+  if (!isReview) rows.push(["Prezzo", formatPrice(a.priceCents, b.currency)]);
   if (isOwner) {
     if (a.customerPhone) rows.push(["Telefono", a.customerPhone]);
     if (a.customerEmail) rows.push(["Email", a.customerEmail]);
     if (a.customerNote) rows.push(["Nota", a.customerNote]);
-  } else if (b.address) {
+  } else if (b.address && !isReview) {
     rows.push(["Dove", b.address]);
   }
 
@@ -162,6 +172,10 @@ export function renderEmail(ctx: EmailContext): RenderedEmail {
   if (isOwner) buttons.push({ label: "Apri il calendario", href: ctx.adminUrl, primary: true });
   if (!isOwner && copy.showManage && ctx.manageUrl) buttons.push({ label: "Sposta o annulla", href: ctx.manageUrl, primary: true });
   if (!isOwner && copy.showCalendar) buttons.push({ label: "Aggiungi al calendario", href: googleCalendarUrl(ctx), primary: false });
+  if (ctx.kind === "review_request" && b.reviewsUrl) {
+    buttons.push({ label: "Lascia una recensione", href: b.reviewsUrl, primary: true });
+    buttons.push({ label: "Prenota il prossimo", href: `${ctx.siteUrl.replace(/\/$/, "")}/${b.slug}/prenota`, primary: false });
+  }
   if (ctx.kind === "booking_cancelled") {
     buttons.push({ label: "Prenota di nuovo", href: `${ctx.siteUrl.replace(/\/$/, "")}/${b.slug}/prenota`, primary: true });
   }

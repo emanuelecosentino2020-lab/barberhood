@@ -1,6 +1,6 @@
 # Stato del progetto
 
-Aggiornato: 25 ottobre 2026.
+Aggiornato: 26 ottobre 2026.
 
 ## Obiettivo
 
@@ -12,6 +12,8 @@ Sistema di prenotazione premium per Barberhood (Siracusa), riusabile e vendibile
 - Motore disponibilità con DST, pagina pubblica, flusso di prenotazione, link cliente sposta/annulla
 - Dashboard completa (oggi, calendario, appuntamenti, clienti, servizi, team, orari, impostazioni)
 - Email via Resend con coda, retry, idempotenza (codice e test con provider finto)
+- Richiesta recensione Google via email N ore dopo l'appuntamento (default 2, max una ogni 6 mesi per cliente; serve il «Link recensioni Google» nelle impostazioni)
+- Foto: nuovo ritratto di Diego, copertina con Luigi e Diego (`cover.webp`)
 - Lint, typecheck, build di produzione, 38 test unitari, 26 test su Postgres reale, 12 test e2e (mobile e desktop) contro uno stack Supabase locale (Postgres 16, PostgREST, GoTrue)
 
 ## Non ancora verificato

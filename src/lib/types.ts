@@ -11,7 +11,8 @@ export type NotificationKind =
   | "booking_cancelled"
   | "reminder"
   | "owner_new_booking"
-  | "owner_booking_cancelled";
+  | "owner_booking_cancelled"
+  | "review_request";
 export type NotificationStatus = "pending" | "processing" | "sent" | "failed" | "cancelled";
 
 export interface Business {
@@ -44,6 +45,7 @@ export interface Business {
   max_advance_days: number;
   cancellation_cutoff_hours: number;
   reminder_hours_before: number;
+  review_request_hours_after: number;
   require_phone: boolean;
   allow_staff_choice: boolean;
   notification_email: string | null;

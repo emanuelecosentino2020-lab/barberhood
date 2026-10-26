@@ -56,7 +56,9 @@ async function Content({ params }: { params: PageProps<"/[slug]/privacy">["param
             <h2>Finalità e base giuridica</h2>
             <p>
               Usiamo i dati solo per gestire la prenotazione: registrarla, inviarti conferma, promemoria e avvisi di modifica o
-              annullamento, e contattarti in caso di imprevisti. La base giuridica è l&apos;esecuzione di misure precontrattuali e del
+              annullamento, e contattarti in caso di imprevisti. Dopo l&apos;appuntamento possiamo inviarti una sola email per
+              chiederti una recensione (al massimo una ogni sei mesi): se non la vuoi, rispondi a quella email o scrivici e non la
+              riceverai più. La base giuridica è l&apos;esecuzione di misure precontrattuali e del
               contratto di servizio richiesto (art. 6.1.b GDPR). Non inviamo comunicazioni promozionali e non facciamo profilazione.
             </p>
           </section>

@@ -20,6 +20,8 @@ export interface DeliveryContext {
     manageTokenNonce: string | null;
   };
   business: EmailContext["business"] & { notificationEmail: string | null; replyTo: string | null };
+  /** True if this customer was already sent a review request recently (any appointment) */
+  reviewRecentlyRequested: boolean;
 }
 
 export interface NotificationStore {
@@ -45,7 +47,10 @@ export interface WorkerResult {
   failed: number;
 }
 
-const CUSTOMER_KINDS: NotificationKind[] = ["booking_confirmed", "booking_rescheduled", "booking_cancelled", "reminder"];
+const CUSTOMER_KINDS: NotificationKind[] = ["booking_confirmed", "booking_rescheduled", "booking_cancelled", "reminder", "review_request"];
+
+/** A review request that could not go out within this window is dropped instead of arriving days later. */
+const REVIEW_REQUEST_MAX_DELAY_MS = 3 * 24 * 60 * 60 * 1000;
 
 /**
  * Decides whether a notification is still relevant. Data is re-read at send
@@ -75,6 +80,16 @@ export function skipReason(n: NotificationRow, ctx: DeliveryContext | null, now:
     case "owner_booking_cancelled":
       if (a.status !== "cancelled") return "appointment_not_cancelled";
       break;
+    case "review_request": {
+      if (a.status !== "confirmed" && a.status !== "completed") return "appointment_not_done";
+      const expected = typeof n.payload.ends_at === "string" ? Date.parse(n.payload.ends_at) : NaN;
+      if (expected !== Date.parse(a.endsAt)) return "appointment_moved";
+      if (Date.parse(a.endsAt) > now.getTime()) return "appointment_not_ended";
+      if (now.getTime() - Date.parse(a.endsAt) > REVIEW_REQUEST_MAX_DELAY_MS) return "too_late";
+      if (!ctx.business.reviewsUrl) return "no_reviews_url";
+      if (ctx.reviewRecentlyRequested) return "review_recently_requested";
+      break;
+    }
   }
   if (CUSTOMER_KINDS.includes(n.kind) && !a.customerEmail) return "no_customer_email";
   if (!CUSTOMER_KINDS.includes(n.kind) && !ctx.business.notificationEmail) return "no_business_email";
