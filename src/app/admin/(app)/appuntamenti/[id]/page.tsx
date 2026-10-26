@@ -1,4 +1,4 @@
-import { ArrowLeft, Mail, MessageCircle, Phone } from "lucide-react";
+import { ArrowLeft, Mail, Phone } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AppointmentActions } from "@/components/admin/appointment-actions";
@@ -18,7 +18,6 @@ const NOTIFICATION_LABEL: Record<string, string> = {
   reminder: "Promemoria",
   owner_new_booking: "Avviso al negozio",
   owner_booking_cancelled: "Avviso disdetta al negozio",
-  review_request: "Richiesta recensione",
 };
 const NOTIFICATION_STATUS: Record<string, string> = {
   pending: "in coda",
@@ -50,8 +49,6 @@ export default async function AppointmentPage({ params }: PageProps<"/admin/appu
   const events = (eventsRes.data ?? []) as AppointmentEvent[];
   const staffList = ((staffRes.data ?? []) as Pick<Staff, "id" | "display_name" | "is_active">[]).filter((s) => s.is_active || s.id === a.staff_id);
   const staffName = (sid: unknown) => staffList.find((s) => s.id === sid)?.display_name ?? "";
-  const reviewWhatsApp = whatsAppReviewUrl(a.customers?.phone ?? null, a.customers?.full_name ?? "", b.name, b.reviews_url);
-  const canAskReview = (a.status === "completed" || a.status === "confirmed") && Date.parse(a.ends_at) <= now;
   const duration = Math.round((Date.parse(a.ends_at) - Date.parse(a.starts_at)) / 60_000);
 
   const describe = (e: AppointmentEvent) => {
@@ -134,16 +131,6 @@ export default async function AppointmentPage({ params }: PageProps<"/admin/appu
                   </a>
                 )}
               </div>
-              {canAskReview && reviewWhatsApp && (
-                <a
-                  href={reviewWhatsApp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex h-10 items-center gap-2 rounded-full border border-line-strong px-4 text-sm hover:border-text"
-                >
-                  <MessageCircle className="size-4" aria-hidden="true" /> Chiedi recensione su WhatsApp
-                </a>
-              )}
               {a.customer_note && <p className="mt-4 rounded-xl bg-surface-2 p-3 text-sm">“{a.customer_note}”</p>}
               {a.customers.notes && <p className="mt-3 text-sm text-muted">Note interne: {a.customers.notes}</p>}
             </>
@@ -182,16 +169,4 @@ export default async function AppointmentPage({ params }: PageProps<"/admin/appu
       </div>
     </div>
   );
-}
-
-/** Prefilled WhatsApp chat asking for a Google review; the owner reviews and sends it. */
-function whatsAppReviewUrl(phone: string | null, fullName: string, businessName: string, reviewsUrl: string | null): string | null {
-  if (!phone || !reviewsUrl) return null;
-  let digits = phone.replace(/[^\d+]/g, "").replace(/^00/, "+");
-  if (digits.startsWith("+")) digits = digits.slice(1);
-  else if (!digits.startsWith("39") || digits.length <= 10) digits = `39${digits}`;
-  if (digits.length < 8) return null;
-  const first = fullName.split(" ")[0] ?? "";
-  const text = `Ciao ${first}, grazie per essere passato da ${businessName}! Se ti sei trovato bene, ci lasci una recensione su Google? Ci vogliono 30 secondi: ${reviewsUrl}`;
-  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
