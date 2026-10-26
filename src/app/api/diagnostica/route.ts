@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { connection } from "next/server";
+import { getPublicCatalog } from "@/server/public";
 
 /**
  * Temporary setup check: tells which configuration is present and whether the
@@ -60,6 +61,15 @@ export async function GET() {
     }
   } else {
     add("Database", "non provato: mancano URL o chiave segreta");
+  }
+
+  if (slug) {
+    try {
+      const c = await getPublicCatalog(slug);
+      add("Pagina pubblica (stesso codice del sito)", c ? `ok: ${c.services.length} servizi, ${c.staff.length} barbieri` : "VUOTA (pagina non trovata)");
+    } catch (err) {
+      add("Pagina pubblica (stesso codice del sito)", `ERRORE ${err instanceof Error ? err.message : ""}`);
+    }
   }
 
   return new Response(lines.join("\n") + "\n", {
