@@ -1,5 +1,6 @@
 import { ArrowRight, ArrowUpRight, Clock, MapPin, Phone, Mail, Star } from "lucide-react";
 import Link from "next/link";
+import { AnnouncementVideo } from "@/components/announcement-video";
 import { ButtonLink } from "@/components/ui/button";
 import { formatDuration, formatPrice, initials } from "@/lib/format";
 import { weeklySummary } from "@/lib/hours";
@@ -8,7 +9,7 @@ import { BrandMark } from "./brand-mark";
 import { FacebookIcon, InstagramIcon } from "./brand-icons";
 
 export function BusinessPage({ catalog, basePath }: { catalog: PublicCatalog; basePath: string }) {
-  const { business: b, services, staff, hours } = catalog;
+  const { business: b, services, staff, hours, announcements } = catalog;
   const bookHref = `${basePath}/prenota`;
   const hero = b.cover_image_url ?? b.gallery[0] ?? null;
   const staffPhotos = new Set(staff.map((p) => p.avatar_url).filter(Boolean));
@@ -66,6 +67,27 @@ export function BusinessPage({ catalog, basePath }: { catalog: PublicCatalog; ba
             )}
           </div>
         </section>
+
+        {/* News from the shop */}
+        {announcements.length > 0 && (
+          <section id="novita" aria-labelledby="novita-title" className="scroll-mt-20 border-b border-line">
+            <div className="mx-auto max-w-6xl px-5 py-12 md:py-16">
+              <h2 id="novita-title" className="display text-4xl sm:text-5xl">Novità</h2>
+              <ul className="mt-8 grid gap-5 md:grid-cols-2">
+                {announcements.map((a) => (
+                  <li key={a.id} className="flex flex-col gap-4 rounded-3xl border border-line bg-surface p-5">
+                    <div>
+                      <p className="text-xs text-subtle">{new Date(a.created_at).toLocaleDateString("it-IT", { day: "numeric", month: "long", timeZone: b.timezone })}</p>
+                      <h3 className="mt-1 text-xl font-medium">{a.title}</h3>
+                      {a.body && <p className="mt-2 whitespace-pre-line text-muted">{a.body}</p>}
+                    </div>
+                    {a.video_url && <AnnouncementVideo url={a.video_url} title={a.title} />}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+        )}
 
         {/* Services */}
         <section id="servizi" className="scroll-mt-20 border-b border-line">

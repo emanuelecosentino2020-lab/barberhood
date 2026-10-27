@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, Clock, LayoutDashboard, LogOut, Scissors, Settings, UserRound, Users } from "lucide-react";
+import { CalendarDays, Clock, LayoutDashboard, LogOut, Megaphone, Scissors, Settings, UserRound, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/components/ui/cn";
@@ -12,7 +12,8 @@ const ITEMS = [
   { href: "/admin/clienti", label: "Clienti", icon: UserRound },
   { href: "/admin/servizi", label: "Servizi", icon: Scissors, manage: true },
   { href: "/admin/team", label: "Team", icon: Users, manage: true },
-  { href: "/admin/orari", label: "Orari", icon: Clock },
+  { href: "/admin/orari", label: "Orari e ferie", icon: Clock },
+  { href: "/admin/comunicazioni", label: "Comunicazioni", icon: Megaphone, manage: true },
   { href: "/admin/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 

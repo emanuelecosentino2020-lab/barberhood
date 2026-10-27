@@ -1214,11 +1214,67 @@ create trigger appointments_review_request
   after insert or update of status, starts_at, ends_at on public.appointments
   for each row execute function private.sync_review_request();
 
+-- ===== supabase/migrations/20261027000001_announcements.sql =====
+-- =============================================================================
+-- Announcements: short news from the shop (closures, new services, promos),
+-- optionally with a video. Shown on the public page while published and not
+-- expired; the owner shares the link on WhatsApp/Instagram from the dashboard.
+--
+-- Videos are uploaded straight from the browser to the "business-videos"
+-- bucket with a signed upload URL issued by the server (files are too big to
+-- pass through a server function). Written to run more than once.
+-- =============================================================================
+
+create table if not exists public.announcements (
+  id uuid primary key default gen_random_uuid(),
+  business_id uuid not null references public.businesses (id) on delete cascade,
+  title text not null check (char_length(title) between 1 and 120),
+  body text check (char_length(body) <= 2000),
+  video_url text check (video_url ~ '^https://'),
+  is_published boolean not null default true,
+  expires_on date,
+  created_by uuid references auth.users (id) on delete set null,
+  created_at timestamptz not null default now()
+);
+create index if not exists announcements_business_idx on public.announcements (business_id, created_at desc);
+
+alter table public.announcements enable row level security;
+revoke all on public.announcements from anon;
+
+drop policy if exists announcements_select on public.announcements;
+drop policy if exists announcements_insert on public.announcements;
+drop policy if exists announcements_update on public.announcements;
+drop policy if exists announcements_delete on public.announcements;
+create policy announcements_select on public.announcements
+  for select to authenticated using ((select private.is_member(business_id)));
+create policy announcements_insert on public.announcements
+  for insert to authenticated with check ((select private.has_role(business_id, array['owner', 'admin']::public.member_role[])));
+create policy announcements_update on public.announcements
+  for update to authenticated
+  using ((select private.has_role(business_id, array['owner', 'admin']::public.member_role[])))
+  with check ((select private.has_role(business_id, array['owner', 'admin']::public.member_role[])));
+create policy announcements_delete on public.announcements
+  for delete to authenticated using ((select private.has_role(business_id, array['owner', 'admin']::public.member_role[])));
+
+-- Video bucket (public read, 50 MB per file). Skipped on plain PostgreSQL.
+do $$
+begin
+  if not exists (select 1 from pg_namespace where nspname = 'storage') then
+    raise notice 'storage schema not found, skipping video bucket';
+    return;
+  end if;
+  insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('business-videos', 'business-videos', true, 52428800,
+          array['video/mp4', 'video/quicktime', 'video/webm'])
+  on conflict (id) do nothing;
+end;
+$$;
+
 -- ===== supabase/seed.sql =====
 -- =============================================================================
 -- Pilot business: Barberhood di Luigi Merlini (Siracusa).
 -- Services, prices and staff are REAL (provided by the client).
--- Logo and photos: provided by the client. Address, phone and opening hours are PLACEHOLDERS marked "(da confermare)".
+-- Logo and photos: provided by the client. Address, phone and opening hours are real (given by the client on 2026-10-27).
 -- Safe to run more than once (fixed ids + on conflict do nothing).
 -- =============================================================================
 
@@ -1233,15 +1289,15 @@ insert into public.businesses (
   'barber',
   'di Luigi Merlini',
   'Barberia a Siracusa. Taglio, barba e rasatura all''italiana, fatti con calma e con le mani giuste.',
-  'Indirizzo da confermare',
+  'Via Polibio 9',
   'Siracusa',
-  null,
-  null,
+  '96100',
+  '351 362 0214',
   null,
   'https://www.instagram.com/barberhood.sr/',
   '/brand/barberhood/logo-mark.svg',
   '/brand/barberhood/cover.webp',
-  '["/brand/barberhood/diego.webp", "/brand/barberhood/luigi.webp"]'::jsonb,
+  '["/brand/barberhood/diego.webp?v=2", "/brand/barberhood/luigi.webp"]'::jsonb,
   'Barbiere',
   null,
   'Luigi Merlini (da confermare)',
@@ -1251,7 +1307,7 @@ insert into public.businesses (
 
 insert into public.staff (id, business_id, display_name, bio, sort_order, avatar_url) values
   ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-000000000001', 'Luigi Merlini', 'Titolare', 1, '/brand/barberhood/luigi.webp'),
-  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-000000000001', 'Diego D''Abarno', null, 2, '/brand/barberhood/diego.webp'),
+  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-000000000001', 'Diego D''Abarno', null, 2, '/brand/barberhood/diego.webp?v=2'),
   ('00000000-0000-4000-8000-0000000000a3', '00000000-0000-4000-8000-000000000001', 'Gabriel Formisano', null, 3, null)
 on conflict (id) do nothing;
 
@@ -1274,11 +1330,10 @@ where st.business_id = '00000000-0000-4000-8000-000000000001'
   and sv.business_id = '00000000-0000-4000-8000-000000000001'
 on conflict do nothing;
 
--- PLACEHOLDER opening hours (da confermare): Tue-Sat 09:00-13:00 and 15:00-20:00
+-- Opening hours: Tue-Sat 09:00-19:00 non-stop; closed Sunday and Monday
 insert into public.working_hours (business_id, staff_id, weekday, start_time, end_time)
-select '00000000-0000-4000-8000-000000000001', null, d, t.s, t.e
+select '00000000-0000-4000-8000-000000000001', null, d, '09:00'::time, '19:00'::time
 from generate_series(2, 6) d
-cross join (values ('09:00'::time, '13:00'::time), ('15:00'::time, '20:00'::time)) as t(s, e)
 where not exists (
   select 1 from public.working_hours where business_id = '00000000-0000-4000-8000-000000000001'
 );
@@ -1288,3 +1343,4 @@ where not exists (
 -- sostituisci l'email qui sotto ed esegui solo questo blocco:
 -- insert into public.business_members (business_id, user_id, role)
 -- select '00000000-0000-4000-8000-000000000001', id, 'owner' from auth.users where email = 'TUA-EMAIL@esempio.it';
+

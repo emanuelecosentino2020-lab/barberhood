@@ -667,3 +667,104 @@ export async function retryFailedNotificationsAction(): Promise<ActionResult> {
     return fail(err);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Announcements (news on the public page, optionally with a video)
+// ---------------------------------------------------------------------------
+const VIDEO_TYPES: Record<string, string> = { "video/mp4": "mp4", "video/quicktime": "mov", "video/webm": "webm" };
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Issues a one-time signed URL so the browser uploads the video straight to
+ * Storage: a phone video is far bigger than a server function request allows.
+ */
+export async function createVideoUploadAction(input: { contentType: string; size: number }): Promise<ActionResult<{ path: string; token: string; publicUrl: string }>> {
+  try {
+    const ctx = await memberForAction("admin");
+    const ext = VIDEO_TYPES[input.contentType];
+    if (!ext) throw new BookingError("invalid_input", "Formato non supportato: usa un video MP4 o MOV.");
+    if (!(input.size > 0) || input.size > MAX_VIDEO_BYTES) throw new BookingError("invalid_input", "Video troppo grande (massimo 50 MB). Accorcialo o mandalo prima su WhatsApp a te stesso per comprimerlo.");
+    const path = `${ctx.business.id}/annuncio-${crypto.randomUUID()}.${ext}`;
+    const storage = createAdminClient().storage.from("business-videos");
+    const { data, error } = await storage.createSignedUploadUrl(path);
+    if (error || !data) throw new BookingError("unavailable", "Caricamento video non disponibile. Esegui lo script di aggiornamento in Supabase.");
+    return { ok: true, data: { path: data.path, token: data.token, publicUrl: storage.getPublicUrl(path).data.publicUrl } };
+  } catch (err) {
+    return fail(err);
+  }
+}
+
+const announcementSchema = z.object({
+  title: z.string().trim().min(1, "Scrivi un titolo").max(120, "Titolo troppo lungo (massimo 120 caratteri)"),
+  body: z.string().trim().max(2000, "Testo troppo lungo (massimo 2000 caratteri)").optional(),
+  videoUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === "" || /^https:\/\/\S+$/.test(v), "Il link del video deve iniziare con https://")
+    .optional(),
+  expiresOn: z.union([localDate, z.literal("")]).optional(),
+});
+
+export async function createAnnouncementAction(input: z.input<typeof announcementSchema>): Promise<ActionResult> {
+  try {
+    const ctx = await memberForAction("admin");
+    const p = announcementSchema.parse(input);
+    const { error } = await ctx.db.from("announcements").insert({
+      business_id: ctx.business.id,
+      title: p.title,
+      body: p.body || null,
+      video_url: p.videoUrl || null,
+      expires_on: p.expiresOn || null,
+      created_by: ctx.user.id,
+    });
+    if (error) {
+      if (error.code === "42P01" || error.code === "PGRST205") throw new BookingError("unavailable", "Manca l'aggiornamento del database: esegui lo script in Supabase.");
+      throw error;
+    }
+    invalidatePublic(ctx);
+    refresh();
+    return { ok: true, message: "Pubblicato sulla pagina." };
+  } catch (err) {
+    return fail(err);
+  }
+}
+
+export async function setAnnouncementPublishedAction(id: string, published: boolean): Promise<ActionResult> {
+  try {
+    const ctx = await memberForAction("admin");
+    const { error } = await ctx.db.from("announcements").update({ is_published: published }).eq("id", uuid.parse(id)).eq("business_id", ctx.business.id);
+    if (error) throw error;
+    invalidatePublic(ctx);
+    refresh();
+    return { ok: true };
+  } catch (err) {
+    return fail(err);
+  }
+}
+
+export async function deleteAnnouncementAction(id: string): Promise<ActionResult> {
+  try {
+    const ctx = await memberForAction("admin");
+    const { data, error } = await ctx.db
+      .from("announcements")
+      .delete()
+      .eq("id", uuid.parse(id))
+      .eq("business_id", ctx.business.id)
+      .select("video_url")
+      .maybeSingle();
+    if (error) throw error;
+    // Remove our own uploaded file too (links to YouTube/Instagram are left alone)
+    const marker = "/business-videos/";
+    const url = (data as { video_url: string | null } | null)?.video_url;
+    if (url?.includes(marker)) {
+      const path = decodeURIComponent(url.slice(url.indexOf(marker) + marker.length));
+      if (path.startsWith(`${ctx.business.id}/`)) await createAdminClient().storage.from("business-videos").remove([path]);
+    }
+    invalidatePublic(ctx);
+    refresh();
+    return { ok: true };
+  } catch (err) {
+    return fail(err);
+  }
+}
