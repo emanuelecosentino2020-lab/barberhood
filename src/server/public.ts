@@ -1,5 +1,7 @@
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import type { Announcement } from "@/lib/announcements";
+import { todayIn } from "@/lib/booking/time";
 import { isServerSupabaseConfigured } from "@/lib/env";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { PUBLIC_BUSINESS_COLUMNS, type PublicBusiness } from "@/lib/types";
@@ -31,6 +33,7 @@ export interface PublicCatalog {
   services: PublicService[];
   staff: PublicStaff[];
   hours: PublicHours[];
+  announcements: Announcement[];
 }
 
 export const businessTag = (slug: string) => `business:${slug}`;
@@ -94,6 +97,7 @@ export async function getPublicCatalog(slug: string): Promise<PublicCatalog | nu
   ]);
   if (services.error || staff.error || links.error || hours.error) throw new Error("catalog_load_failed");
 
+  const announcements = await loadAnnouncements(db, biz.id, todayIn(biz.timezone));
   const activeStaff = new Set((staff.data as PublicStaff[]).map((s) => s.id));
   const linkRows = links.data as { staff_id: string; service_id: string }[];
 
@@ -111,5 +115,23 @@ export async function getPublicCatalog(slug: string): Promise<PublicCatalog | nu
       start: h.start_time.slice(0, 5),
       end: h.end_time.slice(0, 5),
     })),
+    announcements,
   };
+}
+
+/** Published, unexpired news. A missing table (update script not run yet) must not take the page down. */
+async function loadAnnouncements(db: ReturnType<typeof createAdminClient>, businessId: string, today: string): Promise<Announcement[]> {
+  const { data, error } = await db
+    .from("announcements")
+    .select("id, title, body, video_url, created_at, expires_on")
+    .eq("business_id", businessId)
+    .eq("is_published", true)
+    .or(`expires_on.is.null,expires_on.gte.${today}`)
+    .order("created_at", { ascending: false })
+    .limit(3);
+  if (error) {
+    console.error("[catalog] announcements unavailable", error.code, error.message);
+    return [];
+  }
+  return data as Announcement[];
 }

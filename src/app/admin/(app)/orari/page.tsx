@@ -49,6 +49,16 @@ export default async function HoursPage({ searchParams }: PageProps<"/admin/orar
     <div className="space-y-8">
       <PageHeader title="Orari e disponibilità" description="Gli orari del negozio valgono per tutti. Un professionista può avere orari propri, sempre dentro l'apertura del negozio." />
 
+      <section aria-labelledby="blocks" className="space-y-3">
+        <div>
+          <h2 id="blocks" className="text-lg font-semibold">
+            Ferie, assenze e chiusure
+          </h2>
+          <p className="text-sm text-muted">Per tutto il negozio o per un solo barbiere: in quei giorni o in quelle ore non si può prenotare.</p>
+        </div>
+        <TimeBlocks items={(blocksRes.data ?? []) as { id: string; staff_id: string | null; starts_at: string; ends_at: string; reason: string | null }[]} staff={staff} timeZone={b.timezone} today={today} />
+      </section>
+
       <nav aria-label="Di chi sono gli orari" className="flex flex-wrap gap-2">
         {[{ id: null as string | null, name: "Negozio" }, ...staff.map((s) => ({ id: s.id as string | null, name: s.display_name }))].map((s) => (
           <Link
@@ -85,15 +95,6 @@ export default async function HoursPage({ searchParams }: PageProps<"/admin/orar
         <DateOverrides staffId={scope} items={[...overrides.values()]} today={today} canEdit={manage} />
       </section>
 
-      <section aria-labelledby="blocks" className="space-y-3">
-        <div>
-          <h2 id="blocks" className="text-lg font-semibold">
-            Blocchi e ferie
-          </h2>
-          <p className="text-sm text-muted">Periodi in cui non si prende nessuna prenotazione, anche su più giorni.</p>
-        </div>
-        <TimeBlocks items={(blocksRes.data ?? []) as { id: string; staff_id: string | null; starts_at: string; ends_at: string; reason: string | null }[]} staff={staff} timeZone={b.timezone} today={today} />
-      </section>
     </div>
   );
 }

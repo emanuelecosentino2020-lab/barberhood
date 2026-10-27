@@ -248,6 +248,13 @@ export function DateOverrides({
   );
 }
 
+const BLOCK_KINDS = [
+  { label: "Ferie", reason: "Ferie", allDay: true, shop: false },
+  { label: "Assenza", reason: "Assenza", allDay: true, shop: false },
+  { label: "Negozio chiuso", reason: "Chiusura", allDay: true, shop: true },
+  { label: "Solo alcune ore", reason: "Non disponibile", allDay: false, shop: false },
+] as const;
+
 export function TimeBlocks({
   items,
   staff,
@@ -265,8 +272,14 @@ export function TimeBlocks({
   const [endDate, setEndDate] = useState("");
   const [endTime, setEndTime] = useState("23:59");
   const [reason, setReason] = useState("");
+  const [allDay, setAllDay] = useState(true);
   const [pending, start] = useTransition();
   const [result, setResult] = useState<Result>(null);
+  const pick = (k: (typeof BLOCK_KINDS)[number]) => {
+    setReason(k.reason);
+    setAllDay(k.allDay);
+    if (k.shop) setStaffId("");
+  };
   const who = (id: string | null) => (id ? (staff.find((s) => s.id === id)?.display_name ?? "") : "Tutto il negozio");
 
   return (
@@ -308,10 +321,10 @@ export function TimeBlocks({
             const r = await addTimeBlockAction({
               staffId: staffId || null,
               startDate,
-              startTime,
+              startTime: allDay ? "00:00" : startTime,
               endDate: endDate || startDate,
               // 23:59 means "end of that day"
-              endTime: endTime === "23:59" ? "24:00" : endTime,
+              endTime: allDay || endTime === "23:59" ? "24:00" : endTime,
               reason: reason || undefined,
             });
             setResult(r.ok ? { ok: true, text: r.message ?? "Salvato." } : { ok: false, text: r.error });
@@ -323,7 +336,20 @@ export function TimeBlocks({
           });
         }}
       >
-        <p className="text-sm font-medium">Aggiungi blocco o ferie</p>
+        <p className="text-sm font-medium">Aggiungi ferie, assenza o chiusura</p>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Tipo">
+          {BLOCK_KINDS.map((k) => (
+            <button
+              key={k.label}
+              type="button"
+              onClick={() => pick(k)}
+              aria-pressed={reason === k.reason}
+              className={`inline-flex h-9 items-center rounded-full border px-4 text-sm ${reason === k.reason ? "border-text bg-text text-bg" : "border-line-strong hover:border-text"}`}
+            >
+              {k.label}
+            </button>
+          ))}
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Per chi" htmlFor="blk-staff">
             <Select id="blk-staff" value={staffId} onChange={(e) => setStaffId(e.target.value)}>
@@ -342,19 +368,24 @@ export function TimeBlocks({
             <Field label="Dal" htmlFor="blk-sd" className="flex-1">
               <Input id="blk-sd" type="date" min={today} value={startDate} onChange={(e) => setStartDate(e.target.value)} required />
             </Field>
-            <Field label="Ora" htmlFor="blk-st">
-              <Input id="blk-st" type="time" className="w-28" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
-            </Field>
+            {!allDay && (
+              <Field label="Ora" htmlFor="blk-st">
+                <Input id="blk-st" type="time" className="w-28" value={startTime} onChange={(e) => setStartTime(e.target.value)} required />
+              </Field>
+            )}
           </div>
           <div className="flex gap-2">
-            <Field label="Al" htmlFor="blk-ed" className="flex-1">
+            <Field label={allDay ? "Al (compreso)" : "Al"} htmlFor="blk-ed" className="flex-1">
               <Input id="blk-ed" type="date" min={startDate || today} value={endDate} onChange={(e) => setEndDate(e.target.value)} placeholder="Stesso giorno" />
             </Field>
-            <Field label="Ora" htmlFor="blk-et">
-              <Input id="blk-et" type="time" className="w-28" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
-            </Field>
+            {!allDay && (
+              <Field label="Ora" htmlFor="blk-et">
+                <Input id="blk-et" type="time" className="w-28" value={endTime} onChange={(e) => setEndTime(e.target.value)} required />
+              </Field>
+            )}
           </div>
         </div>
+        <Checkbox checked={allDay} onChange={(e) => setAllDay(e.target.checked)} label="Giornate intere (togli la spunta per bloccare solo alcune ore)" />
         <p className="text-sm text-muted">Gli appuntamenti già presi nel periodo non vengono annullati: te li segnaliamo e li gestisci tu.</p>
         {result && <Notice tone={result.ok ? "success" : "error"} title={result.text} />}
         <Button type="submit" size="sm" variant="secondary" loading={pending}>
