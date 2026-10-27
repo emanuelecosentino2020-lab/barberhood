@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Pilot business: Barberhood di Luigi Merlini (Siracusa).
 -- Services, prices and staff are REAL (provided by the client).
--- Logo and photos: provided by the client. Address, phone and opening hours are PLACEHOLDERS marked "(da confermare)".
+-- Logo and photos: provided by the client. Address, phone and opening hours are real (given by the client on 2026-10-27).
 -- Safe to run more than once (fixed ids + on conflict do nothing).
 -- =============================================================================
 
@@ -16,15 +16,15 @@ insert into public.businesses (
   'barber',
   'di Luigi Merlini',
   'Barberia a Siracusa. Taglio, barba e rasatura all''italiana, fatti con calma e con le mani giuste.',
-  'Indirizzo da confermare',
+  'Via Polibio 9',
   'Siracusa',
-  null,
-  null,
+  '96100',
+  '351 362 0214',
   null,
   'https://www.instagram.com/barberhood.sr/',
   '/brand/barberhood/logo-mark.svg',
   '/brand/barberhood/cover.webp',
-  '["/brand/barberhood/diego.webp", "/brand/barberhood/luigi.webp"]'::jsonb,
+  '["/brand/barberhood/diego.webp?v=2", "/brand/barberhood/luigi.webp"]'::jsonb,
   'Barbiere',
   null,
   'Luigi Merlini (da confermare)',
@@ -34,7 +34,7 @@ insert into public.businesses (
 
 insert into public.staff (id, business_id, display_name, bio, sort_order, avatar_url) values
   ('00000000-0000-4000-8000-0000000000a1', '00000000-0000-4000-8000-000000000001', 'Luigi Merlini', 'Titolare', 1, '/brand/barberhood/luigi.webp'),
-  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-000000000001', 'Diego D''Abarno', null, 2, '/brand/barberhood/diego.webp'),
+  ('00000000-0000-4000-8000-0000000000a2', '00000000-0000-4000-8000-000000000001', 'Diego D''Abarno', null, 2, '/brand/barberhood/diego.webp?v=2'),
   ('00000000-0000-4000-8000-0000000000a3', '00000000-0000-4000-8000-000000000001', 'Gabriel Formisano', null, 3, null)
 on conflict (id) do nothing;
 
@@ -57,11 +57,10 @@ where st.business_id = '00000000-0000-4000-8000-000000000001'
   and sv.business_id = '00000000-0000-4000-8000-000000000001'
 on conflict do nothing;
 
--- PLACEHOLDER opening hours (da confermare): Tue-Sat 09:00-13:00 and 15:00-20:00
+-- Opening hours: Tue-Sat 09:00-19:00 non-stop; closed Sunday and Monday
 insert into public.working_hours (business_id, staff_id, weekday, start_time, end_time)
-select '00000000-0000-4000-8000-000000000001', null, d, t.s, t.e
+select '00000000-0000-4000-8000-000000000001', null, d, '09:00'::time, '19:00'::time
 from generate_series(2, 6) d
-cross join (values ('09:00'::time, '13:00'::time), ('15:00'::time, '20:00'::time)) as t(s, e)
 where not exists (
   select 1 from public.working_hours where business_id = '00000000-0000-4000-8000-000000000001'
 );
