@@ -1,10 +1,11 @@
 "use client";
 
-import { CalendarDays, Clock, LayoutDashboard, LogOut, Megaphone, Scissors, Settings, UserRound, Users } from "lucide-react";
+import { CalendarDays, ChevronsUpDown, Clock, LayoutDashboard, LogOut, Megaphone, Scissors, Settings, UserRound, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useId } from "react";
 import { cn } from "@/components/ui/cn";
-import { logout } from "@/app/admin/actions";
+import { logout, switchBusiness } from "@/app/admin/actions";
 
 const ITEMS = [
   { href: "/admin", label: "Oggi", icon: LayoutDashboard, exact: true },
@@ -17,7 +18,37 @@ const ITEMS = [
   { href: "/admin/impostazioni", label: "Impostazioni", icon: Settings },
 ];
 
-export function AdminNav({ businessName, canManage, userEmail }: { businessName: string; canManage: boolean; userEmail: string }) {
+interface NavProps {
+  businessId: string;
+  businessName: string;
+  businesses: { id: string; name: string }[];
+  canManage: boolean;
+  userEmail: string;
+}
+
+/** Shown only to accounts that manage more than one business. */
+export function BusinessSwitcher({ businessId, businesses, className }: Pick<NavProps, "businessId" | "businesses"> & { className?: string }) {
+  const id = useId();
+  return (
+    <form action={switchBusiness} className={cn("relative", className)}>
+      <label htmlFor={id} className="sr-only">Attività</label>
+      <select
+        id={id}
+        name="business_id"
+        defaultValue={businessId}
+        onChange={(e) => e.currentTarget.form?.requestSubmit()}
+        className="h-9 w-full appearance-none truncate rounded-xl border border-line bg-bg pr-8 pl-3 text-sm font-semibold"
+      >
+        {businesses.map((b) => (
+          <option key={b.id} value={b.id}>{b.name}</option>
+        ))}
+      </select>
+      <ChevronsUpDown className="pointer-events-none absolute top-2.5 right-2.5 size-4 text-subtle" aria-hidden="true" />
+    </form>
+  );
+}
+
+export function AdminNav({ businessId, businessName, businesses, canManage, userEmail }: NavProps) {
   const pathname = usePathname();
   const items = ITEMS.filter((i) => !i.manage || canManage);
   const isActive = (href: string, exact?: boolean) => (exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`));
@@ -28,7 +59,11 @@ export function AdminNav({ businessName, canManage, userEmail }: { businessName:
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-line bg-surface px-3 py-5 lg:flex">
         <div className="px-3">
           <p className="eyebrow">Gestione</p>
-          <p className="mt-1 truncate font-semibold">{businessName}</p>
+          {businesses.length > 1 ? (
+            <BusinessSwitcher businessId={businessId} businesses={businesses} className="mt-2" />
+          ) : (
+            <p className="mt-1 truncate font-semibold">{businessName}</p>
+          )}
         </div>
         <nav aria-label="Menu principale" className="mt-8 flex flex-1 flex-col gap-0.5">
           {items.map((i) => (
