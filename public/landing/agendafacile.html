@@ -1,0 +1,411 @@
+<title>AgendaFacile</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@500;600;700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: bianco pulito, una fascia azzurra chiara per sezione alternata; hero a due colonne con il telefono che mostra una prenotazione vera */
+:root {
+  --bg: #ffffff;
+  --tint: #f1f7fd;
+  --ink: #0e2a43;
+  --muted: #587087;
+  --line: #e0eaf3;
+  --accent: #2b8fd6;
+  --accent-ink: #1d6fae;
+  --accent-soft: #ddeefb;
+  --on-accent: #ffffff;
+  --card: #ffffff;
+  --phone: #0e2a43;
+  --font-display: "Onest", "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1a28; --tint: #0f2234; --ink: #e8f1f9; --muted: #9db2c6; --line: #1d3448;
+    --accent: #4aa8ec; --accent-ink: #7cc0f2; --accent-soft: #143552; --on-accent: #06192a;
+    --card: #11273b; --phone: #050f19; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1a28; --tint: #0f2234; --ink: #e8f1f9; --muted: #9db2c6; --line: #1d3448;
+  --accent: #4aa8ec; --accent-ink: #7cc0f2; --accent-soft: #143552; --on-accent: #06192a;
+  --card: #11273b; --phone: #050f19; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
+h1, h2, h3 { font-family: var(--font-display); line-height: 1.15; margin: 0; text-wrap: balance; letter-spacing: -0.015em; }
+p { margin: 0; }
+a { color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.band { padding-block: 88px; }
+.band--tint { background: var(--tint); border-block: 1px solid var(--line); }
+
+/* Header */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 14px; }
+.logo { display: inline-flex; align-items: center; text-decoration: none; font-family: var(--font-display); font-weight: 700; font-size: 23px; letter-spacing: -0.02em; }
+.logo svg { width: 34px; height: 34px; flex: none; }
+.logo .f { color: var(--accent); }
+.logo .tld { color: var(--muted); font-weight: 500; }
+.nav { display: flex; align-items: center; gap: 28px; font-size: 15px; font-weight: 500; }
+.nav a { text-decoration: none; color: var(--muted); }
+.nav a:hover { color: var(--ink); }
+.nav .btn, .nav .btn:hover { color: var(--on-accent); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 22px; border-radius: 10px; font-weight: 600; font-size: 16px; text-decoration: none; border: 1px solid transparent; transition: background-color .15s, border-color .15s; cursor: pointer; }
+.btn--primary { background: var(--accent); color: var(--on-accent); }
+.btn--primary:hover { background: var(--accent-ink); }
+.btn--ghost { border-color: var(--line); color: var(--ink); background: var(--card); }
+.btn--ghost:hover { border-color: var(--accent); }
+.btn--sm { padding: 9px 16px; font-size: 15px; }
+
+/* Hero */
+.hero { padding-block: 72px 88px; }
+.hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: center; }
+.hero h1 { font-size: clamp(36px, 5.2vw, 58px); font-weight: 700; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.lead { font-size: 19px; color: var(--muted); max-width: 34em; margin-top: 20px; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+.proof { margin-top: 28px; font-size: 15px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.proof span { display: inline-flex; align-items: center; gap: 7px; }
+.proof svg { width: 16px; height: 16px; color: var(--accent); flex: none; }
+
+/* Phone mock */
+.phone-col { display: flex; flex-direction: column; align-items: center; gap: 14px; min-width: 0; }
+.phone { width: 100%; max-width: 330px; background: var(--phone); border-radius: 38px; padding: 12px; box-shadow: 0 30px 60px -30px rgba(14, 42, 67, .45); }
+.screen { background: var(--card); color: var(--ink); border-radius: 28px; padding: 22px 18px 18px; font-size: 14px; }
+.screen .shop { display: flex; align-items: center; gap: 10px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+.shop .av { width: 36px; height: 36px; border-radius: 50%; background: var(--ink); color: var(--bg); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 13px; flex: none; }
+.shop b { display: block; font-family: var(--font-display); font-size: 15px; }
+.shop small { color: var(--muted); font-size: 12px; }
+.step-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); font-weight: 600; margin: 14px 0 8px; }
+.svc { display: flex; justify-content: space-between; align-items: center; border: 1.5px solid var(--accent); background: var(--accent-soft); border-radius: 12px; padding: 10px 12px; }
+.svc b { font-weight: 600; }
+.svc span { color: var(--muted); font-size: 13px; }
+.svc .p { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+.days { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.day { border: 1px solid var(--line); border-radius: 10px; text-align: center; padding: 6px 0; line-height: 1.2; }
+.day small { display: block; font-size: 10px; text-transform: uppercase; color: var(--muted); letter-spacing: .05em; }
+.day b { font-size: 15px; font-variant-numeric: tabular-nums; }
+.day.on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.day.on small { color: inherit; opacity: .7; }
+.slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.slot { border: 1px solid var(--line); border-radius: 8px; text-align: center; padding: 6px 0; font-variant-numeric: tabular-nums; font-size: 13px; }
+.slot.off { color: var(--muted); text-decoration: line-through; opacity: .55; }
+.slot.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.confirm { margin-top: 14px; background: var(--ink); color: var(--bg); text-align: center; border-radius: 12px; padding: 11px; font-weight: 600; }
+.caption { font-size: 13px; color: var(--muted); text-align: center; }
+.caption a { color: var(--accent-ink); }
+
+/* Section heads */
+.eyebrow { font-size: 13px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink); }
+.sec-head { max-width: 640px; display: grid; gap: 12px; margin-bottom: 44px; }
+.sec-head h2 { font-size: clamp(28px, 3.6vw, 40px); font-weight: 700; }
+.sec-head p { color: var(--muted); font-size: 18px; }
+
+/* Per chi */
+.verticals { display: flex; flex-wrap: wrap; gap: 10px; }
+.chip { border: 1px solid var(--line); background: var(--card); border-radius: 999px; padding: 9px 18px; font-weight: 500; font-size: 16px; }
+
+/* Features */
+.features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px 36px; }
+.feat { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.feat .ic { width: 42px; height: 42px; border-radius: 11px; background: var(--accent-soft); color: var(--accent-ink); display: grid; place-items: center; margin-bottom: 6px; }
+.feat .ic svg { width: 22px; height: 22px; }
+.feat h3 { font-size: 19px; font-weight: 600; }
+.feat p { color: var(--muted); font-size: 16px; }
+
+/* Confronto */
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.col { border-radius: var(--r); padding: 28px; border: 1px solid var(--line); background: var(--card); min-width: 0; }
+.col.us { border: 2px solid var(--accent); }
+.col h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.col li { display: grid; grid-template-columns: 20px 1fr; gap: 10px; font-size: 16px; }
+.col li svg { width: 20px; height: 20px; margin-top: 3px; }
+.col.them li { color: var(--muted); }
+.col.them li svg { color: var(--muted); }
+.col.us li svg { color: var(--accent); }
+
+/* Come funziona */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: s; }
+.stepc { border-top: 2px solid var(--accent); padding-top: 20px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.stepc .n { font-family: var(--font-display); font-weight: 700; color: var(--accent); font-size: 15px; }
+.stepc h3 { font-size: 20px; font-weight: 600; }
+.stepc p { color: var(--muted); font-size: 16px; }
+
+/* CTA */
+.final { text-align: left; display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: center; background: var(--ink); color: var(--bg); border-radius: 22px; padding: 48px; }
+.final h2 { font-size: clamp(26px, 3.4vw, 38px); }
+.final p { opacity: .8; margin-top: 12px; font-size: 18px; }
+.contacts { display: grid; gap: 10px; }
+.contact { display: flex; justify-content: space-between; align-items: center; gap: 12px; background: color-mix(in srgb, var(--bg) 8%, transparent); border: 1px solid color-mix(in srgb, var(--bg) 18%, transparent); border-radius: 12px; padding: 14px 16px; }
+.contact small { display: block; font-size: 12px; opacity: .7; text-transform: uppercase; letter-spacing: .06em; }
+.contact b { font-weight: 600; user-select: all; overflow-wrap: anywhere; }
+.copy { background: var(--accent); color: var(--on-accent); border: 0; border-radius: 8px; padding: 7px 12px; font: 600 13px var(--font-body); cursor: pointer; flex: none; }
+
+footer { padding-block: 36px 48px; color: var(--muted); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; align-items: center; }
+footer .logo { font-size: 17px; color: var(--ink); }
+footer .logo svg { width: 26px; height: 26px; }
+
+@media (max-width: 900px) {
+  .hero .wrap, .final { grid-template-columns: 1fr; }
+  .features { grid-template-columns: 1fr 1fr; }
+  .nav a:not(.btn) { display: none; }
+}
+@media (max-width: 640px) {
+  body { font-size: 16px; }
+  .band { padding-block: 64px; }
+  .hero { padding-block: 44px 64px; }
+  .features, .steps, .compare { grid-template-columns: 1fr; }
+  .final { padding: 32px 22px; }
+  .logo { font-size: 18px; }
+  .logo .tld { display: none; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .slot.on { animation: pick 2.4s ease-in-out 1s both; }
+  @keyframes pick { 0% { background: transparent; color: var(--ink); border-color: var(--line); } 30%, 100% { background: var(--accent); color: var(--on-accent); border-color: var(--accent); } }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="check" viewBox="0 0 20 20"><path d="M4.5 10.5l3.5 3.5 7.5-8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="x" viewBox="0 0 20 20"><path d="M6 6l8 8M14 6l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="logo" href="#inizio" aria-label="AgendaFacile, torna all'inizio">
+      <span>agenda<span class="f">facile</span><span class="tld">.it</span></span>
+    </a>
+    <nav class="nav" aria-label="Sezioni">
+      <a href="#cosa">Cosa ottieni</a>
+      <a href="#come">Come funziona</a>
+      <a class="btn btn--primary btn--sm" href="#contatti">Parliamone</a>
+    </nav>
+  </div>
+</header>
+
+<main id="inizio">
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1>Le prenotazioni della tua attività, <em>senza telefonate.</em></h1>
+        <p class="lead">Costruiamo un sistema di prenotazione online fatto su misura per te. I tuoi clienti scelgono servizio, giorno e orario dal telefono. Tu trovi tutto in un'agenda chiara, senza doppie prenotazioni.</p>
+        <div class="cta-row">
+          <a class="btn btn--primary" href="#contatti">Richiedi una demo gratuita</a>
+          <a class="btn btn--ghost" href="#come">Scopri come funziona</a>
+        </div>
+        <div class="proof">
+          <span><svg aria-hidden="true"><use href="#check"/></svg>Con il tuo nome e il tuo logo</span>
+          <span><svg aria-hidden="true"><use href="#check"/></svg>Nessuna commissione sulle prenotazioni</span>
+          <span><svg aria-hidden="true"><use href="#check"/></svg>Ti seguiamo noi, di persona</span>
+        </div>
+      </div>
+
+      <div class="phone-col">
+        <div class="phone" role="img" aria-label="Esempio di schermata: prenotazione di un taglio uomo, mercoledì 28 ottobre alle 16:00">
+          <div class="screen" aria-hidden="true">
+            <div class="shop">
+              <div class="av">SA</div>
+              <div><b>Salone Aurora</b><small>Prenota online</small></div>
+            </div>
+            <div class="step-label">Servizio</div>
+            <div class="svc">
+              <div><b>Taglio uomo</b><br><span>40 min · con Marco</span></div>
+              <div class="p">18 €</div>
+            </div>
+            <div class="step-label">Giorno</div>
+            <div class="days">
+              <div class="day"><small>mar</small><b>27</b></div>
+              <div class="day on"><small>mer</small><b>28</b></div>
+              <div class="day"><small>gio</small><b>29</b></div>
+              <div class="day"><small>ven</small><b>30</b></div>
+              <div class="day"><small>sab</small><b>31</b></div>
+            </div>
+            <div class="step-label">Orario</div>
+            <div class="slots">
+              <div class="slot off">9:00</div>
+              <div class="slot">9:40</div>
+              <div class="slot off">10:20</div>
+              <div class="slot">11:00</div>
+              <div class="slot off">15:20</div>
+              <div class="slot on">16:00</div>
+              <div class="slot">16:40</div>
+              <div class="slot">17:20</div>
+            </div>
+            <div class="confirm">Conferma prenotazione</div>
+          </div>
+        </div>
+        <p class="caption">Esempio: così prenota il tuo cliente dal telefono</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--tint" aria-labelledby="perchi">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Per chi è</span>
+        <h2 id="perchi">Per ogni attività che lavora su appuntamento</h2>
+        <p>Se oggi gestisci le prenotazioni tra telefono, WhatsApp e un'agenda di carta, possiamo semplificarti la giornata.</p>
+      </div>
+      <div class="verticals">
+        <span class="chip">Barbieri</span>
+        <span class="chip">Parrucchieri</span>
+        <span class="chip">Centri estetici</span>
+        <span class="chip">Onicotecniche</span>
+        <span class="chip">Ristoranti e pizzerie</span>
+        <span class="chip">Fisioterapisti</span>
+        <span class="chip">Studi medici</span>
+        <span class="chip">Personal trainer</span>
+        <span class="chip">Tatuatori</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="cosa" aria-labelledby="cosa-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Cosa ottieni</span>
+        <h2 id="cosa-h">Un sistema tuo, pronto da usare dal primo giorno</h2>
+      </div>
+      <div class="features">
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3"/><path d="M11 18h2"/></svg></div>
+          <h3>Prenotazioni online 24 ore su 24</h3>
+          <p>Il cliente prenota anche di sera o di domenica, mentre tu non rispondi al telefono.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></div>
+          <h3>Un'agenda per te e per lo staff</h3>
+          <p>Vedi chi arriva, a che ora e per quale servizio. Ogni collaboratore ha i suoi orari e le sue pause.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <h3>Mai due clienti alla stessa ora</h3>
+          <p>Il sistema mostra solo gli orari davvero liberi e tiene conto della durata di ogni servizio.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3"/><path d="M18 3v4h-4M6 21v-4h4"/></svg></div>
+          <h3>Spostamenti e disdette in autonomia</h3>
+          <p>Il cliente può spostare o annullare l'appuntamento dal link che riceve, entro i limiti che decidi tu.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z"/></svg></div>
+          <h3>Più recensioni su Google</h3>
+          <p>Dopo l'appuntamento il cliente riceve un invito a lasciare una recensione alla tua attività.</p>
+        </div>
+        <div class="feat">
+          <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></svg></div>
+          <h3>Con il tuo marchio</h3>
+          <p>Logo, colori, foto e servizi della tua attività. Il cliente vede te, non una piattaforma generica.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band band--tint" aria-labelledby="diff">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">La differenza</span>
+        <h2 id="diff">Perché un sistema su misura e non un'app di prenotazione</h2>
+        <p>Le grandi app di prenotazione funzionano, ma mettono te accanto ai tuoi concorrenti e spesso chiedono una percentuale.</p>
+      </div>
+      <div class="compare">
+        <div class="col them">
+          <h3>App e portali di prenotazione</h3>
+          <ul>
+            <li><svg aria-hidden="true"><use href="#x"/></svg>Il cliente vede anche le attività vicine a te</li>
+            <li><svg aria-hidden="true"><use href="#x"/></svg>Commissioni sui nuovi clienti o abbonamenti a livelli</li>
+            <li><svg aria-hidden="true"><use href="#x"/></svg>Il marchio in evidenza è quello della piattaforma</li>
+            <li><svg aria-hidden="true"><use href="#x"/></svg>Configuri tutto da solo</li>
+          </ul>
+        </div>
+        <div class="col us">
+          <h3>Con AgendaFacile</h3>
+          <ul>
+            <li><svg aria-hidden="true"><use href="#check"/></svg>Una pagina solo tua, senza concorrenti</li>
+            <li><svg aria-hidden="true"><use href="#check"/></svg>Nessuna percentuale sulle prenotazioni</li>
+            <li><svg aria-hidden="true"><use href="#check"/></svg>Il tuo nome, il tuo logo, il tuo link</li>
+            <li><svg aria-hidden="true"><use href="#check"/></svg>Lo prepariamo noi con i tuoi servizi e i tuoi orari</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="come" aria-labelledby="come-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <span class="eyebrow">Come funziona</span>
+        <h2 id="come-h">Dalla prima chiacchierata al primo cliente prenotato</h2>
+      </div>
+      <div class="steps">
+        <div class="stepc">
+          <span class="n">1</span>
+          <h3>Ci conosciamo</h3>
+          <p>Una chiamata o un caffè. Ci racconti servizi, prezzi, orari e chi lavora con te.</p>
+        </div>
+        <div class="stepc">
+          <span class="n">2</span>
+          <h3>Ti mostriamo l'anteprima</h3>
+          <p>Prepariamo il sistema con i tuoi dati e il tuo stile. Lo provi dal telefono e ci dici cosa cambiare.</p>
+        </div>
+        <div class="stepc">
+          <span class="n">3</span>
+          <h3>Vai online</h3>
+          <p>Metti il link su Instagram, Google e WhatsApp. Noi restiamo a disposizione per qualsiasi modifica.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <section class="band" id="contatti" aria-labelledby="contatti-h">
+    <div class="wrap">
+      <div class="final">
+        <div>
+          <h2 id="contatti-h">Vuoi vedere come sarebbe per la tua attività?</h2>
+          <p>Scrivici il nome della tua attività. Ti prepariamo una demo con i tuoi servizi, senza impegno.</p>
+        </div>
+        <div class="contacts">
+          <div class="contact">
+            <div><small>Email</small><b id="c-mail">ciao@agendafacile.it</b></div>
+            <button class="copy" type="button" data-copy="c-mail">Copia</button>
+          </div>
+          <div class="contact">
+            <div><small>Instagram</small><b id="c-ig">@agendafacile.it</b></div>
+            <button class="copy" type="button" data-copy="c-ig">Copia</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="logo"><span>agenda<span class="f">facile</span><span class="tld">.it</span></span></span>
+    <span>Sistemi di prenotazione su misura</span>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll('.copy').forEach(function (b) {
+  b.addEventListener('click', function () {
+    var el = document.getElementById(b.dataset.copy);
+    var done = function () { b.textContent = 'Copiato'; setTimeout(function () { b.textContent = 'Copia'; }, 1600); };
+    var fallback = function () { var r = document.createRange(); r.selectNodeContents(el); var s = getSelection(); s.removeAllRanges(); s.addRange(r); };
+    try { navigator.clipboard.writeText(el.textContent).then(done, fallback); } catch (e) { fallback(); }
+  });
+});
+</script>

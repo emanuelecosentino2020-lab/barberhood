@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { BusinessPage } from "@/components/public/business-page";
 import { PublicPageSkeleton, PublicShell } from "@/components/public/shell";
 import { getPublicCatalog } from "@/server/public";
+import { publicBasePath } from "@/server/tenant";
 
 export async function generateMetadata({ params }: PageProps<"/[slug]">): Promise<Metadata> {
   const { slug } = await params;
@@ -32,7 +33,7 @@ async function Content({ params }: { params: PageProps<"/[slug]">["params"] }) {
   if (!catalog) notFound();
   return (
     <PublicShell business={catalog.business}>
-      <BusinessPage catalog={catalog} basePath={`/${slug}`} />
+      <BusinessPage catalog={catalog} basePath={await publicBasePath(slug)} />
     </PublicShell>
   );
 }

@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { PublicShell } from "@/components/public/shell";
 import { getPublicCatalog } from "@/server/public";
+import { publicBasePath } from "@/server/tenant";
 
 export const metadata: Metadata = { title: "Informativa privacy" };
 
@@ -32,7 +33,7 @@ async function Content({ params }: { params: PageProps<"/[slug]/privacy">["param
   return (
     <PublicShell business={b}>
       <main className="mx-auto w-full max-w-2xl px-5 py-14">
-        <Link href={`/${slug}`} className="text-sm text-muted hover:text-text">
+        <Link href={(await publicBasePath(slug)) || "/"} className="text-sm text-muted hover:text-text">
           ← {b.name}
         </Link>
         <h1 className="display mt-8 text-4xl">Informativa privacy</h1>

@@ -86,7 +86,9 @@ export function BookingFlow({
   staff,
   initialServiceId,
   initialStaffId,
+  basePath,
 }: {
+  basePath: string;
   business: FlowBusiness;
   services: FlowService[];
   staff: FlowStaff[];
@@ -96,7 +98,8 @@ export function BookingFlow({
   const router = useRouter();
   const params = useSearchParams();
   const storageKey = `booking:${business.slug}`;
-  const base = `/${business.slug}/prenota`;
+  const base = `${basePath}/prenota`;
+  const home = basePath || "/";
 
   const [draft, setDraft] = useState<Draft>(() => ({
     serviceId: services.some((s) => s.id === initialServiceId) ? initialServiceId : null,
@@ -271,7 +274,7 @@ export function BookingFlow({
       timeZone: business.timezone,
     });
     return (
-      <FlowFrame business={business} onClose={`/${business.slug}`}>
+      <FlowFrame business={business} onClose={home}>
         <div className="animate-fade-up py-6">
           <div className="flex size-14 items-center justify-center rounded-full bg-accent text-accent-ink">
             <Check className="size-7" aria-hidden="true" />
@@ -317,7 +320,7 @@ export function BookingFlow({
   };
 
   return (
-    <FlowFrame business={business} onClose={`/${business.slug}`}>
+    <FlowFrame business={business} onClose={home}>
       <div className="flex items-center gap-3">
         {stepIndex > 0 ? (
           <button
@@ -456,7 +459,7 @@ export function BookingFlow({
                 <input type="text" name="website" tabIndex={-1} autoComplete="off" />
               </label>
             </div>
-            <DetailsFields draft={draft} setDraft={setDraft} errors={fieldErrors} requirePhone={business.require_phone} slug={business.slug} />
+            <DetailsFields draft={draft} setDraft={setDraft} errors={fieldErrors} requirePhone={business.require_phone} privacyHref={`${basePath}/privacy`} />
             <Button type="submit" size="lg" className="w-full sm:w-auto">
               Continua
             </Button>
@@ -571,13 +574,13 @@ function DetailsFields({
   setDraft,
   errors,
   requirePhone,
-  slug,
+  privacyHref,
 }: {
   draft: Draft;
   setDraft: React.Dispatch<React.SetStateAction<Draft>>;
   errors: Partial<Record<keyof Details, string>>;
   requirePhone: boolean;
-  slug: string;
+  privacyHref: string;
 }) {
   const set = (k: keyof Details) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = k === "acceptPrivacy" ? (e.target as HTMLInputElement).checked : e.target.value;
@@ -606,7 +609,7 @@ function DetailsFields({
           label={
             <>
               Ho letto l&apos;
-              <a href={`/${slug}/privacy`} target="_blank" rel="noopener noreferrer" className="text-text underline underline-offset-4">
+              <a href={privacyHref} target="_blank" rel="noopener noreferrer" className="text-text underline underline-offset-4">
                 informativa privacy
               </a>
               . I dati servono solo a gestire l&apos;appuntamento.

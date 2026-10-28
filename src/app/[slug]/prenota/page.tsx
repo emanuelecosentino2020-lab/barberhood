@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { BookingFlow } from "@/components/booking/booking-flow";
 import { PublicShell } from "@/components/public/shell";
 import { getPublicCatalog } from "@/server/public";
+import { publicBasePath } from "@/server/tenant";
 
 export const metadata: Metadata = { title: "Prenota", robots: { index: false } };
 
@@ -25,6 +26,7 @@ async function Content({ params, searchParams }: PageProps<"/[slug]/prenota">) {
   return (
     <PublicShell business={b}>
       <BookingFlow
+        basePath={await publicBasePath(slug)}
         business={{
           slug: b.slug,
           name: b.name,
