@@ -19,7 +19,7 @@ export const SUBDOMAIN_ALIASES: Record<string, string> = { demo: "demo-barbiere"
 /** Request header the proxy sets on business subdomains (always overwritten, never trusted from the client). */
 export const TENANT_HEADER = "x-tenant-slug";
 
-export const LANDING_PATH = "/landing/agendafacile.html";
+export const LANDING_PATH = "/landing/index.html";
 
 /** Public pages of a business, relative to its base path */
 const TENANT_PAGES = ["/", "/prenota", "/privacy"];

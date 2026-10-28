@@ -53,7 +53,7 @@ Con la variabile `ROOT_DOMAIN=agendafacile.it` (logica in `src/lib/hosts.ts`, ap
 
 | Indirizzo | Mostra |
 | --- | --- |
-| `agendafacile.it`, `www.agendafacile.it` | landing dell'agenzia (`public/landing/agendafacile.html`) |
+| `agendafacile.it`, `www.agendafacile.it` | landing dell'agenzia (`public/landing/index.html`) |
 | `admin.agendafacile.it` | dashboard (`/` porta a `/admin`) |
 | `demo.agendafacile.it` | attività `demo-barbiere` (alias in `SUBDOMAIN_ALIASES`) |
 | `<slug>.agendafacile.it` | l'attività con quello slug, con indirizzi puliti: `/`, `/prenota`, `/privacy` |
