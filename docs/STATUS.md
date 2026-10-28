@@ -16,6 +16,12 @@ Sistema di prenotazione premium per Barberhood (Siracusa), riusabile e vendibile
 - Foto: nuovo ritratto di Diego, copertina con Luigi e Diego (`cover.webp`)
 - Lint, typecheck, build di produzione, 38 test unitari, 26 test su Postgres reale, 12 test e2e (mobile e desktop) contro uno stack Supabase locale (Postgres 16, PostgREST, GoTrue)
 
+## Demo per i clienti
+
+- Barberia di fantasia «Lama & Pettine» su `/demo-barbiere`: `supabase/demo-barbiere.sql` (si incolla nello SQL Editor; rieseguirlo riporta la demo a zero con agenda centrata su oggi). Tocca solo l'attività demo.
+- Chi gestisce più attività le cambia dal selettore in alto nella dashboard.
+- Senza foto (mancano immagini con licenza): si aggiungono da Impostazioni e Team.
+
 ## Non ancora verificato
 
 - **Invio email reale**: mai provato, mancano API key Resend e dominio verificato

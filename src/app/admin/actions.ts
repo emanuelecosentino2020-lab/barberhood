@@ -76,7 +76,8 @@ export async function logout() {
   redirect("/admin/login");
 }
 
-export async function switchBusiness(businessId: string) {
+export async function switchBusiness(formData: FormData) {
+  const businessId = String(formData.get("business_id") ?? "");
   const ctx = await memberForAction();
   if (!ctx.memberships.some((m) => m.business_id === businessId)) return;
   (await cookies()).set(ACTIVE_BUSINESS_COOKIE, businessId, { httpOnly: true, sameSite: "lax", secure: true, path: "/admin" });

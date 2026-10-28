@@ -47,6 +47,21 @@ Nulla di questa guida è stato eseguito su account reali: va fatto dal titolare 
 2. Dal registrar crea il record indicato da Vercel (di solito `CNAME prenota → cname.vercel-dns.com`). HTTPS è automatico.
 3. Aggiorna `NEXT_PUBLIC_SITE_URL` e la Site URL di Supabase, poi rifai il deploy.
 
+### Dominio dell'agenzia con sottodomini (agendafacile.it)
+
+Con la variabile `ROOT_DOMAIN=agendafacile.it` (logica in `src/lib/hosts.ts`, applicata da `src/proxy.ts`):
+
+| Indirizzo | Mostra |
+| --- | --- |
+| `agendafacile.it`, `www.agendafacile.it` | landing dell'agenzia (`public/landing/index.html`) |
+| `admin.agendafacile.it` | dashboard (`/` porta a `/admin`) |
+| `demo.agendafacile.it` | attività `demo-barbiere` (alias in `SUBDOMAIN_ALIASES`) |
+| `<slug>.agendafacile.it` | l'attività con quello slug, con indirizzi puliti: `/`, `/prenota`, `/privacy` |
+
+`/admin`, `/api` e `/gestisci` funzionano su ogni host; i vecchi link `/<slug>/...` sul sottodominio fanno redirect alla versione pulita. Gli altri host (vercel.app, dominio proprio di un negozio) restano come prima.
+
+In Vercel aggiungi i domini al progetto. Senza wildcard bastano un record A per il dominio e un CNAME per ogni sottodominio; per `*.agendafacile.it` Vercel chiede di usare i suoi nameserver.
+
 ## 4. Email con Resend
 
 Senza questo passo le prenotazioni funzionano, ma le email restano in coda (non vengono perse: partono quando l'invio viene attivato, saltando quelle ormai inutili, come promemoria di appuntamenti passati).
